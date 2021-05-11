@@ -1,6 +1,20 @@
 # osm
-
+Steps to install Open Street Maps on Centos 7 (with aim to install on Red Hat 7 also)
 Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/centos-7-open-street-map-tile-server
+
+## Summary
+
+We require the following software: 
+ * Mapnik
+ * Open Street Maps Carto, provides stylesheets for mapping layers in OSM https://github.com/gravitystorm/openstreetmap-carto
+ * apache web server - providing the web service to server web pages etc
+ * mod_tile - cache of tiles
+ * PostgreSQL with PostGIS extensions
+
+Optionally, if we want to edit the stylesheets we could consider installing
+ * [Kosmtik](https://github.com/kosmtik)
+
+# Pre-Reqs
 
 ## Create local user 
 Steps not in the linked article
@@ -11,18 +25,20 @@ sudo su -
   usermod -aG wheel renderaccount
 ```
 
-## CentOS 7 Minimal ISO Dependencies
+## CentOS 7   Dependencies
 There are some pre-requisite packages that need to be installed on your CentOS 7 server before we can get started installing the dependencies listed above. This guide assumes that you have installed the minimal ISO for CentOS 7 (command-line only). If not, or depending on other packages you may have installed historically, some of the pre-requisitie packages listed below may already be installed on your server.
 
 ``` bash
 # Dependencies
+sudo yum -y install epel-release
+
 sudo yum install libpng libtiff libjpeg freetype gdal cairo pycairo sqlite geos boost curl libcurl libicu bzip2-devel libpng-devel libtiff-devel zlib-devel libjpeg-devel libxml2-devel python-setuptools proj-devel proj proj-epsg proj-nad freetype-devel libicu-devel gdal-devel sqlite-devel libcurl-devel cairo-devel pycairo-devel geos-devel protobuf-devel protobuf-c-devel lua-devel cmake proj boost-thread proj-devel autoconf automake libtool pkgconfig ragel gtk-doc glib2 glib2-devel libpng libpng-devel libwebp libtool-ltdl-devel python-devel harfbuzz harfbuzz-devel harfbuzz-icu boost-devel cabextract xorg-x11-font-utils fontconfig perl-DBD-Pg mesa-libGLU-devel
 
 # GCC++ 14 standards are required for Mapnik so we shall install the Dev Toolset from the CentOS Software Collections
 #in red hat would instead be something like:   yum-config-manager --enable rhel-server-rhscl-7-rpms
 sudo yum install centos-release-scl
 sudo yum install devtoolset-7
-sudo scl enable devtoolset-7 bash
+scl enable devtoolset-7 bash
 
 # Carto can be installed via NodeJS so we will install NodeJS too
 sudo yum install nodejs
@@ -31,3 +47,42 @@ npm -v
 # Git Version Control is required to clone relevant dependency source code repositories
 sudo yum install git
 ```
+
+# Installation
+
+## Postgres and PostGIS
+
+### Install Postgres
+
+```
+sudo rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo yum -y install postgresql11-server postgresql11
+sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
+sudo systemctl enable postgresql-11.service
+sudo systemctl start postgresql-11.service
+
+```
+
+### Setup Postgres User/s: 
+
+``` bash
+sudo su - postgres
+  psql -c "alter user postgres with password 'password'"
+    ALTER ROLE
+exit
+```
+
+### Todo
+Configure and optimise postgres and storage under postgres
+
+### Install PostGIS: 
+``` bash
+sudo yum install postgis25_11
+
+```
+# Useful references
+
+https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
+Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-postgresql-11-x-on-centos-7
+Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
+
