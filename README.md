@@ -7,13 +7,16 @@ Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/ce
 We require the following software: 
  * [Mapnik](https://github.com/mapnik/mapnik) to render tiles, which also requires: 
    * boost
- * Open Street Maps Carto, provides stylesheets for mapping layers in OSM https://github.com/gravitystorm/openstreetmap-carto
+ * [Open Street Maps Carto](https://github.com/gravitystorm/openstreetmap-carto), provides stylesheets for mapping layers in OSM 
  * apache web server - providing the web service to server web pages etc
- * mod_tile - cache of tiles
+ * mod_tile and rendrd - cache of tiles
  * PostgreSQL with PostGIS extensions
 
 Optionally, if we want to edit the stylesheets we could consider installing
  * [Kosmtik](https://github.com/kosmtik)
+
+Ignored for now: 
+ * Harfbuzz - no idea if we require it...
 
 # Pre-Reqs
 
@@ -22,7 +25,9 @@ Optionally, if we want to edit the stylesheets we could consider installing
 ``` bash
 cd ~
 wget https://downloads.sourceforge.net/boost/boost_1_76_0.tar.bz2
-wget https://github.com/mapnik/mapnik/archive/refs/heads/master.zip
+wget https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar.bz2
+wget https://github.com/openstreetmap/mod_tile/archive/refs/tags/0.5.tar.gz
+wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.1.tar.gz
 ```
 
 
@@ -171,6 +176,7 @@ sudo yum install osm2pgsql
 # SO WHY ARE THE FOLLOWING PACKAGES INSTALLED IN THE ABOVE YUM INSTALL??: boost boost-thread boost-devel
 
 # Boostrap and install recent boost (get later version as required)
+#should already be downloaded from above
 cd ~
 JOBS=`grep -c ^processor /proc/cpuinfo`
 tar xf boost_1_76_0.tar.bz2
@@ -185,35 +191,110 @@ sudo ldconfig
 
 ```
 
+Note if you have logged out and back in and are seeing g++ compiler issues around c++14, you need to rerun the following: `scl enable devtoolset-7 bash`
+
 
 ## Install Mapnik
 ``` bash
 # Clone and Bootstrap
-vi /etc/profile.d/pgsql.sh
-    $ export PATH=$PATH:/usr/pgsql-11/bin:/usr/pgsql-11/lib:/usr/local/lib
+sudo vi /etc/profile.d/pgsql.sh
+    export PATH=$PATH:/usr/pgsql-11/bin:/usr/pgsql-11/lib:/usr/local/lib
 source /etc/profile.d/pgsql.sh
+echo $PATH #test
 #git clone git://github.com/mapnik/mapnik
+#should already be downloaded from above
 cd ~
-tar xf master.zip
-mv master mapnik
-cd mapnik
+tar xf mapnik-v3.1.0.tar.bz2
+cd mapnik-v3.1.0
 ./bootstrap.sh
-./configure
+#did get a strange git error here...
+./configure BOOST_LIBS=/opt/boost/lib BOOST_INCLUDES=/opt/boost/includes
+
+#Got the following interesting feedback:
+	Note: will build without these OPTIONAL dependencies:
+	   - proj (Proj.4 C Projections library | configure with PROJ_LIBS & PROJ_INCLUDES | more info: http://trac.osgeo.org/proj/)
+	   - webp (WEBP C library | configure with WEBP_LIBS & WEBP_INCLUDES)
+	   - sqlite3 (SQLite3 C Library | configure with SQLITE_LIBS & SQLITE_INCLUDES | more info: https://github.com/mapnik/mapnik/wiki/SQLite)
+	   - sqlite_rtree (The SQLite plugin requires libsqlite3 built with RTREE support (-DSQLITE_ENABLE_RTREE=1))
+	   - gdal-config (gdal-config program | try setting GDAL_CONFIG SCons option)
+	   - ogr (OGR-enabled GDAL C++ Library | configured using gdal-config program | try setting GDAL_CONFIG SCons option | more info: https://github.com/mapnik/mapnik/wiki/OGR)
+	   - cairo (Cairo C library | configured using pkg-config | try setting PKG_CONFIG_PATH SCons option)
+
 
 # Handle mapbox/variant.hpp: no such file or directory error - https://github.com/mapnik/mapnik/issues/3246
-git submodule sync
-git submodule update --init deps/mapbox/variant
+# MC SKIPPED THESE TWO STEPS WITH HOPE THE ISSUE HAS BEEN RESOLVED SINCE WRITTEN
+#git submodule sync
+#git submodule update --init deps/mapbox/variant
 
-# Build and install
+# Build and install - note that this takes some time...
 make && sudo make install
 sudo ldconfig
 
 ``` 
+
+Note if you have logged out and back in and are seeing g++ compiler issues around c++14, you need to rerun the following: `scl enable devtoolset-7 bash`
+
+## mod_tile install
+
+``` bash
+# Clone and configure
+#git clone git://github.com/openstreetmap/mod_tile.git
+#should already be downloaded from above
+cd ~
+cd ~ 
+tar xf 0.5.tar.gz
+cd mod_tile-0.5
+./autogen.sh
+./configure
+
+# From where you cloned the Mapnik source (see above) copy Mapnick libraries to /usr/include/mapnik
+cp -rf mapnik/include/mapnik/* /usr/include/mapnik
+cp mapnik/include/mapnik/geometry/box2d.hpp /usr/include/mapnik
+
+# Build and install mod_tile
+make
+sudo make install
+sudo make install-mod_tile
+sudo ldconfig
+```
+
+
+## Carto Install With Stylesheet
+``` bash
+# Install Carto using NodeJS that we installed earlier
+npm install -g carto
+
+#OSM Carto Stylesheet
+# Clone
+#git clone git://github.com/gravitystorm/openstreetmap-carto.git
+#should already be downloaded from above
+cd ~
+tar xf v5.3.1.tar.gz
+cd openstreetmap-carto-5.3.1
+#Skipping the following hoping it's fixed by now
+#git checkout `git rev-list -n 1 --before="2016-12-04 00:00" master`
+
+# Compile and download shape files
+carto project.mml > mapnik.xml
+scripts/get-shapefiles.py
+``` 
+
+## Renderd and mod_tile configuration
+
+TODO
+
+# Import Map Data into PostgreSQL
+
+TODO
+
+# Test
+
+TODO
 
 # Useful references
 
 https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
 Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-postgresql-11-x-on-centos-7
 Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
-	
+General good counter reference for mapnik, boost, node: https://gist.github.com/davidheyman/5417b515b421a99360ca
 
