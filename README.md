@@ -71,7 +71,7 @@ sudo yum install git
 ```
 # Install Postgres
 sudo rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-sudo yum -y install postgresql11-server postgresql11
+sudo yum -y install postgresql11-server postgresql11 postgresql11-devel
 
 #init db and basic setup
 sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
