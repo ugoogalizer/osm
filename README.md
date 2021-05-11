@@ -5,12 +5,12 @@ Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/ce
 ## Summary
 
 We require the following software: 
- * [Mapnik](https://github.com/mapnik/mapnik) to render tiles, which also requires: 
+ * [Mapnik](https://github.com/mapnik/mapnik) mapping toolkit used by mod_tile and renderd to render tiles: 
    * boost
  * [Open Street Maps Carto](https://github.com/gravitystorm/openstreetmap-carto), provides stylesheets for mapping layers in OSM 
  * apache web server - providing the web service to server web pages etc
- * mod_tile and rendrd - cache of tiles
- * PostgreSQL with PostGIS extensions
+ * [mod_tile and renderd](https://github.com/openstreetmap/mod_tile) - efficiently render and serve raster map tiles 
+ * PostgreSQL with PostGIS extensions (v11 chosen here)
 
 Optionally, if we want to edit the stylesheets we could consider installing
  * [Kosmtik](https://github.com/kosmtik)
@@ -21,7 +21,7 @@ Ignored for now:
 # Pre-Reqs
 
 ## Pre-Downloads
-
+For offline installation, the following downloads are required ahead:
 ``` bash
 cd ~
 wget https://downloads.sourceforge.net/boost/boost_1_76_0.tar.bz2
@@ -165,7 +165,7 @@ sudo yum install osm2pgsql
 
 ``` bash
 # Basic Installation with default configuration
- yum install httpd
+ yum install httpd httpd-devel
 ```
 
 
@@ -241,17 +241,20 @@ Note if you have logged out and back in and are seeing g++ compiler issues aroun
 #git clone git://github.com/openstreetmap/mod_tile.git
 #should already be downloaded from above
 cd ~
-cd ~ 
 tar xf 0.5.tar.gz
 cd mod_tile-0.5
 ./autogen.sh
 ./configure
 
 # From where you cloned the Mapnik source (see above) copy Mapnick libraries to /usr/include/mapnik
-cp -rf mapnik/include/mapnik/* /usr/include/mapnik
-cp mapnik/include/mapnik/geometry/box2d.hpp /usr/include/mapnik
+sudo mkdir /usr/include/mapnik
+sudo cp -rf ~/mapnik-v3.1.0/include/mapnik/* /usr/include/mapnik
+#NOTE MC ADJUSTED the below line to be all because box2d.hpp wasn't in that folder
+#sudo cp ~/mapnik-v3.1.0/include/mapnik/geometry/box2d.hpp /usr/include/mapnik
+sudo cp ~/mapnik-v3.1.0/include/mapnik/geometry/* /usr/include/mapnik
 
 # Build and install mod_tile
+cd ~/mod_tile-0.5
 make
 sudo make install
 sudo make install-mod_tile
@@ -260,9 +263,84 @@ sudo ldconfig
 
 
 ## Carto Install With Stylesheet
+Unknown how to achieve this offline yet...
 ``` bash
 # Install Carto using NodeJS that we installed earlier
 npm install -g carto
+
+```
+Note this then installed the following packages!
+
+```
+└─┬ carto@1.2.0
+  ├── chroma-js@1.3.7
+  ├── hsluv@0.0.3
+  ├─┬ js-yaml@3.12.2
+  │ ├─┬ argparse@1.0.10
+  │ │ └── sprintf-js@1.0.3
+  │ └── esprima@4.0.1
+  ├── lodash@4.17.21
+  ├── mapnik-reference@8.10.0
+  ├── semver@5.6.0
+  └─┬ yargs@12.0.5
+    ├─┬ cliui@4.1.0
+    │ ├─┬ strip-ansi@4.0.0
+    │ │ └── ansi-regex@3.0.0
+    │ └─┬ wrap-ansi@2.1.0
+    │   ├─┬ string-width@1.0.2
+    │   │ ├── code-point-at@1.1.0
+    │   │ └─┬ is-fullwidth-code-point@1.0.0
+    │   │   └── number-is-nan@1.0.1
+    │   └─┬ strip-ansi@3.0.1
+    │     └── ansi-regex@2.1.1
+    ├── decamelize@1.2.0
+    ├─┬ find-up@3.0.0
+    │ └─┬ locate-path@3.0.0
+    │   ├─┬ p-locate@3.0.0
+    │   │ └─┬ p-limit@2.3.0
+    │   │   └── p-try@2.2.0
+    │   └── path-exists@3.0.0
+    ├── get-caller-file@1.0.3
+    ├─┬ os-locale@3.1.0
+    │ ├─┬ execa@1.0.0
+    │ │ ├─┬ cross-spawn@6.0.5
+    │ │ │ ├── nice-try@1.0.5
+    │ │ │ ├── path-key@2.0.1
+    │ │ │ ├─┬ shebang-command@1.2.0
+    │ │ │ │ └── shebang-regex@1.0.0
+    │ │ │ └─┬ which@1.3.1
+    │ │ │   └── isexe@2.0.0
+    │ │ ├─┬ get-stream@4.1.0
+    │ │ │ └─┬ pump@3.0.0
+    │ │ │   ├── end-of-stream@1.4.4
+    │ │ │   └─┬ once@1.4.0
+    │ │ │     └── wrappy@1.0.2
+    │ │ ├── is-stream@1.1.0
+    │ │ ├── npm-run-path@2.0.2
+    │ │ ├── p-finally@1.0.0
+    │ │ ├── signal-exit@3.0.3
+    │ │ └── strip-eof@1.0.0
+    │ ├─┬ lcid@2.0.0
+    │ │ └── invert-kv@2.0.0
+    │ └─┬ mem@4.3.0
+    │   ├─┬ map-age-cleaner@0.1.3
+    │   │ └── p-defer@1.0.0
+    │   ├── mimic-fn@2.1.0
+    │   └── p-is-promise@2.1.0
+    ├── require-directory@2.1.1
+    ├── require-main-filename@1.0.1
+    ├── set-blocking@2.0.0
+    ├─┬ string-width@2.1.1
+    │ └── is-fullwidth-code-point@2.0.0
+    ├── which-module@2.0.0
+    ├── y18n@4.0.3
+    └─┬ yargs-parser@11.1.1
+      └── camelcase@5.3.1
+
+```
+
+
+```
 
 #OSM Carto Stylesheet
 # Clone
@@ -274,14 +352,180 @@ cd openstreetmap-carto-5.3.1
 #Skipping the following hoping it's fixed by now
 #git checkout `git rev-list -n 1 --before="2016-12-04 00:00" master`
 
-# Compile and download shape files
+# Compile and download shape files, NOTE the first one threw quite a few Warnings for me
 carto project.mml > mapnik.xml
 scripts/get-shapefiles.py
 ``` 
 
 ## Renderd and mod_tile configuration
+Note you have to update the path to the mapnik.xml file below
 
-TODO
+https://github.com/openstreetmap/mod_tile
+
+
+``` bash
+# Configure Renderd
+vi /usr/local/etc/renderd.conf
+
+    # Edit where your paths and number of threads differ
+    socketname=/var/run/renderd/renderd.sock
+    num_threads=1
+    plugins_dir=/usr/local/lib/mapnik/input
+    font_dir=/usr/local/lib/mapnik/fonts
+    XML=/home/renderaccount/openstreetmap-carto-5.3.1/mapnik.xml # See OSM Carto Stylesheet section
+    HOST=192.168.1.1 # Host IP Address
+
+# Configure mod_tile
+vi /etc/httpd/conf.d/mod_tile.conf
+
+    # Edit the ServerName and ServerAlias to suit your server
+    # Also update LoadTileConfigFile and ModTileRenderdSocketName if this differs on your server
+    LoadModule tile_module /etc/httpd/modules/mod_tile.so
+    <VirtualHost *:80>
+        ServerName map1.earth.dev.hyperlearning.ai
+        ServerAlias a.map1.earth.dev.hyperlearning.ai b.map1.earth.dev.hyperlearning.ai c.map1.earth.dev.hyperlearning.ai d.map1.earth.dev.hyperlearning.ai
+        DocumentRoot /var/www/html
+
+        # Specify the default base storage path for where tiles live. A number of different storage backends
+        # are available, that can be used for storing tiles.  Currently these are a file based storage, a memcached
+        # based storage and a RADOS based storage.
+        # The file based storage uses a simple file path as its storage path ( /path/to/tiledir )
+        # The RADOS based storage takes a location to the rados config file and a pool name ( rados://poolname/path/to/ceph.conf )
+        # The memcached based storage currently has no configuration options and always connects to memcached on localhost ( memcached:// )
+        #
+        # The storage path can be overwritten on a style by style basis from the style TileConfigFile
+        ModTileTileDir /var/lib/mod_tile
+
+        # You can either manually configure each tile set with the default png extension and mimetype
+        #    AddTileConfig /folder/ TileSetName
+        # or manually configure each tile set, specifying the file extension
+        #    AddTileMimeConfig /folder/ TileSetName js
+        # or load all the tile sets defined in the configuration file into this virtual host.
+        # Some tile set specific configuration parameters can only be specified via the configuration file option
+        LoadTileConfigFile /usr/local/etc/renderd.conf
+
+        # Specify if mod_tile should keep tile delivery stats, which can be accessed from the URL /mod_tile
+        # The default is On. As keeping stats needs to take a lock, this might have some performance impact,
+        # but for nearly all intents and purposes this should be negligable ans so it is safe to keep this turned on.
+        ModTileEnableStats On
+
+        # Turns on bulk mode. In bulk mode, mod_tile does not request any dirty tiles to be rerendered. Missing tiles
+        # are always requested in the lowest priority. The default is Off.
+        ModTileBulkMode Off
+        ModTileRequestTimeout 3
+
+        # Timeout before giving up for a tile to be rendered that is otherwise missing
+        ModTileMissingRequestTimeout 10
+
+        # If tile is out of date, don't re-render it if past this load threshold (users gets old tile)
+        ModTileMaxLoadOld 16
+
+        # If tile is missing, don't render it if past this load threshold (user gets 404 error)
+        ModTileMaxLoadMissing 50
+
+        # Sets how old an expired tile has to be to be considered very old and therefore get elevated priority in rendering
+        ModTileVeryOldThreshold 31536000000000
+
+        # Unix domain socket where we connect to the rendering daemon
+        ModTileRenderdSocketName /var/run/renderd/renderd.sock
+
+        # Alternatively you can use a TCP socket to connect to renderd. The first part
+        # is the location of the renderd server and the second is the port to connect to.
+        #   ModTileRenderdSocketAddr renderd.mydomain.com 7653
+
+        ##
+        ## Options controlling the cache proxy expiry headers. All values are in seconds.
+        ##
+        ## Caching is both important to reduce the load and bandwidth of the server, as
+        ## well as reduce the load time for the user. The site loads fastest if tiles can be
+        ## taken from the users browser cache and no round trip through the internet is needed.
+        ## With minutely or hourly updates, however there is a trade-off between cacheability
+        ## and freshness. As one can't predict the future, these are only heuristics, that
+        ## need tuning.
+        ## If there is a known update schedule such as only using weekly planet dumps to update the db,
+        ## this can also be taken into account through the constant PLANET_INTERVAL in render_config.h
+        ## but requires a recompile of mod_tile
+
+        ## The values in this sample configuration are not the same as the defaults
+        ## that apply if the config settings are left out. The defaults are more conservative
+        ## and disable most of the heuristics.
+
+        ##
+        ## Caching is always a trade-off between being up to date and reducing server load or
+        ## client side latency and bandwidth requirements. Under some conditions, like poor
+        ## network conditions it might be more important to have good caching rather than the latest tiles.
+        ## Therefor the following config options allow to set a special hostheader for which the caching
+        ## behaviour is different to the normal heuristics
+        ##
+        ## The CacheExtended parameters overwrite all other caching parameters (including CacheDurationMax)
+        ## for tiles being requested via the hostname CacheExtendedHostname
+        #ModTileCacheExtendedHostname cache.tile.openstreetmap.org
+        #ModTileCacheExtendedDuration 2592000
+
+        # Upper bound on the length a tile will be set cacheable, which takes
+        # precedence over other settings of cacheing
+        ModTileCacheDurationMax 604800
+
+        # Sets the time tiles can be cached for that are known to by outdated and have been
+        # sent to renderd to be rerendered. This should be set to a value corresponding
+        # roughly to how long it will take renderd to get through its queue. There is an additional
+        # fuzz factor on top of this to not have all tiles expire at the same time
+        ModTileCacheDurationDirty 900
+
+        # Specify the minimum time mod_tile will set the cache expiry to for fresh tiles. There
+        # is an additional fuzz factor of between 0 and 3 hours on top of this.
+        ModTileCacheDurationMinimum 10800
+
+        # Lower zoom levels are less likely to change noticeable, so these could be cached for longer
+        # without users noticing much.
+        # The heuristic offers three levels of zoom, Low, Medium and High, for which different minimum
+        # cacheing times can be specified.
+
+        #Specify the zoom level below  which Medium starts and the time in seconds for which they can be cached
+        ModTileCacheDurationMediumZoom 13 86400
+
+        #Specify the zoom level below which Low starts and the time in seconds for which they can be cached
+        ModTileCacheDurationLowZoom 9 518400
+
+        # A further heuristic to determine cacheing times is when was the last time a tile has changed.
+        # If it hasn't changed for a while, it is less likely to change in the immediate future, so the
+        # tiles can be cached for longer.
+        # For example, if the factor is 0.20 and the tile hasn't changed in the last 5 days, it can be cached
+        # for up to one day without having to re-validate.
+        ModTileCacheLastModifiedFactor 0.20
+
+        ## Tile Throttling
+        ## Tile scrappers can often download large numbers of tiles and overly straining tileserver resources
+        ## mod_tile therefore offers the ability to automatically throttle requests from ip addresses that have
+        ## requested a lot of tiles.
+        ## The mechanism uses a token bucket approach to shape traffic. I.e. there is an initial pool of n tiles
+        ## per ip that can be requested arbitrarily fast. After that this pool gets filled up at a constant rate
+        ## The algorithm has two metrics. One based on overall tiles served to an ip address and a second one based on
+        ## the number of requests to renderd / tirex to render a new tile.
+
+        ## Overall enable or disable tile throttling
+        ModTileEnableTileThrottling Off
+        # Specify if you want to use the connecting IP for throtteling, or use the X-Forwarded-For header to determin the
+        # IP address to be used for tile throttling. This can be useful if you have a reverse proxy / http accellerator
+        # in front of your tile server.
+        # 0 - don't use X-Forward-For and allways use the IP that apache sees
+        # 1 - use the client IP address, i.e. the first entry in the X-Forwarded-For list. This works through a cascade of proxies.
+        #     However, as the X-Forwarded-For is written by the client this is open to manipulation and can be used to circumvent the throttling
+        # 2 - use the last specified IP in the X-Forwarded-For list. If you know all requests come through a reverse proxy
+        #     that adds an X-Forwarded-For header, you can trust this IP to be the IP the reverse proxy saw for the request
+        ModTileEnableTileThrottlingXForward 0
+        ## Parameters (poolsize in tiles and topup rate in tiles per second) for throttling tile serving.
+        ModTileThrottlingTiles 10000 1
+        ## Parameters (poolsize in tiles and topup rate in tiles per second) for throttling render requests.
+        ModTileThrottlingRenders 128 0.2
+
+        ###
+        ###
+        # increase the log level for more detailed information
+        LogLevel debug
+
+    </VirtualHost>
+```
 
 # Import Map Data into PostgreSQL
 
@@ -293,6 +537,8 @@ TODO
 
 # Useful references
 
+Once again, the main source: https://knowledgebase.hyperlearning.ai/en/articles/centos-7-open-street-map-tile-server
+An alternate source: https://gist.github.com/coder4web/39e981adbc859db62576dc6840a4023b
 https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
 Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-postgresql-11-x-on-centos-7
 Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
