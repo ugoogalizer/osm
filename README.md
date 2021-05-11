@@ -30,6 +30,7 @@ There are some pre-requisite packages that need to be installed on your CentOS 7
 
 ``` bash
 # Dependencies
+#Adjust accordingly for red-hat
 sudo yum -y install epel-release
 
 sudo yum install libpng libtiff libjpeg freetype gdal cairo pycairo sqlite geos boost curl libcurl libicu bzip2-devel libpng-devel libtiff-devel zlib-devel libjpeg-devel libxml2-devel python-setuptools proj-devel proj proj-epsg proj-nad freetype-devel libicu-devel gdal-devel sqlite-devel libcurl-devel cairo-devel pycairo-devel geos-devel protobuf-devel protobuf-c-devel lua-devel cmake proj boost-thread proj-devel autoconf automake libtool pkgconfig ragel gtk-doc glib2 glib2-devel libpng libpng-devel libwebp libtool-ltdl-devel python-devel harfbuzz harfbuzz-devel harfbuzz-icu boost-devel cabextract xorg-x11-font-utils fontconfig perl-DBD-Pg mesa-libGLU-devel
@@ -101,6 +102,9 @@ sudo systemctl status postgresql-11.service
 # Check that PostgreSQL is listening on port 5432 by default
 netstat -an | grep 5432
 
+#install PostGIS
+sudo yum install postgis25_11
+
 # Create the GIS database (Basic Setup)
 sudo su - postgres
 psql
@@ -131,11 +135,31 @@ sudo sysctl kernel.shmmax
 ### Todo
 Configure and optimise postgres and storage under postgres
 
-### Install PostGIS: 
-``` bash
-sudo yum install postgis25_11
 
+## osm2pgsql
+Note this installed the following packages: 
+* geos-3.4.2-2.el7.x86_64
+* proj-4.8.0-4.el7.x86_64
+* osm2pgsql-0.92.0-1.el7.
+
+``` bash
+sudo yum install osm2pgsql
 ```
+
+## Apache Web (HTTP) Server
+
+``` bash
+# Basic Installation with default configuration
+ yum install httpd
+```
+
+
+
+## Install Boost
+``` bash
+sudo yum install boost boost-thread boost-devel
+```
+
 # Useful references
 
 https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
