@@ -52,24 +52,80 @@ sudo yum install git
 
 ## Postgres and PostGIS
 
-### Install Postgres
-
 ```
+# Install Postgres
 sudo rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 sudo yum -y install postgresql11-server postgresql11
+
+#init db and basic setup
 sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
+cd /var/lib/pgsql/11
+cp data/postgresql.conf data/postgresql.conf.orig
+vi data/postgresql.conf
+    # Add the IP addresses on which the server should listen for connections NOT REQUIRED AT THIS STAGE
+    listen_addresses = 'localhost,192.168.1.1'
+
 sudo systemctl enable postgresql-11.service
 sudo systemctl start postgresql-11.service
 
-```
-
-### Setup Postgres User/s: 
-
-``` bash
+#Setup Postgres User/s: 
 sudo su - postgres
   psql -c "alter user postgres with password 'password'"
     ALTER ROLE
 exit
+
+# Basic Authentication Methods
+cd /var/lib/pgsql/11
+cp data/pg_hba.conf data/pg_hba.conf.orig
+vi data/pg_hba.conf
+
+    # Update your client authentication methods as appropriate
+    local   all all                 md5
+    host    all all 127.0.0.1/32    md5
+    host    all all ::1/128         md5
+    #host    all all 192.168.1.0/24  md5 #Only required if listening outside host I think
+
+# Tile Server OSM Processing Performance
+vi data/postgresql.conf
+
+    # Update to suit your server capabilities (MC CHANGED NOTHING IN ORIG SETUP)
+    shared_buffers = 128MB
+    checkpoint_segments = 20
+    maintenance_work_mem = 256MB
+    autovacuum = off
+
+# Restart PostgreSQL Server
+sudo systemctl restart postgresql-11.service
+sudo systemctl status postgresql-11.service
+
+# Check that PostgreSQL is listening on port 5432 by default
+netstat -an | grep 5432
+
+# Create the GIS database (Basic Setup)
+sudo su - postgres
+psql
+    CREATE DATABASE gis WITH ENCODING = 'UTF8';
+    \q
+
+# Execute PostGIS SQL Installation Files (still as the postgres user)
+export PATH=$PATH:/usr/pgsql-11/bin
+psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/postgis.sql
+psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/spatial_ref_sys.sql
+createuser osm -W # No to all questions
+createuser apache -W # No to all questions
+echo "grant all on geometry_columns to apache;" | psql gis
+echo "grant all on spatial_ref_sys to apache;" | psql gis
+echo "grant all on geometry_columns to osm;" | psql gis
+echo "grant all on spatial_ref_sys to osm;" | psql gis
+exit
+
+# Kernel Configuration change for PostgreSQL OSM Processing Performance
+sudo vi /etc/sysctl.conf
+    kernel.shmmax=268435456
+    #TODO - confirm with someone this persists
+sudo sysctl -p
+sudo sysctl kernel.shmmax
+
 ```
 
 ### Todo
@@ -85,4 +141,5 @@ sudo yum install postgis25_11
 https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
 Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-postgresql-11-x-on-centos-7
 Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
+	
 
