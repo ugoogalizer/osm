@@ -5,7 +5,8 @@ Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/ce
 ## Summary
 
 We require the following software: 
- * Mapnik
+ * [Mapnik](https://github.com/mapnik/mapnik) to render tiles, which also requires: 
+   * boost
  * Open Street Maps Carto, provides stylesheets for mapping layers in OSM https://github.com/gravitystorm/openstreetmap-carto
  * apache web server - providing the web service to server web pages etc
  * mod_tile - cache of tiles
@@ -15,6 +16,15 @@ Optionally, if we want to edit the stylesheets we could consider installing
  * [Kosmtik](https://github.com/kosmtik)
 
 # Pre-Reqs
+
+## Pre-Downloads
+
+``` bash
+cd ~
+wget https://downloads.sourceforge.net/boost/boost_1_76_0.tar.bz2
+wget https://github.com/mapnik/mapnik/archive/refs/heads/master.zip
+```
+
 
 ## Create local user 
 Steps not in the linked article
@@ -157,8 +167,48 @@ sudo yum install osm2pgsql
 
 ## Install Boost
 ``` bash
-sudo yum install boost boost-thread boost-devel
+#The boost versions in centos7 are not high enough for mapnik, need to build from source
+# SO WHY ARE THE FOLLOWING PACKAGES INSTALLED IN THE ABOVE YUM INSTALL??: boost boost-thread boost-devel
+
+# Boostrap and install recent boost (get later version as required)
+cd ~
+JOBS=`grep -c ^processor /proc/cpuinfo`
+tar xf boost_1_76_0.tar.bz2
+cd boost_1_76_0
+./bootstrap.sh
+./b2 -d1 -j${JOBS} --with-thread --with-filesystem --with-python --with-regex -sHAVE_ICU=1 --with-program_options --with-system link=shared release toolset=gcc stage
+sudo ./b2 -d1 -j${JOBS} --with-thread --with-filesystem --with-python --with-regex -sHAVE_ICU=1 --with-program_options --with-system link=shared release toolset=gcc install
+
+# set up support for libraries installed in /usr/local/lib
+sudo bash -c "echo '/usr/local/lib' > /etc/ld.so.conf.d/boost.conf"
+sudo ldconfig
+
 ```
+
+
+## Install Mapnik
+``` bash
+# Clone and Bootstrap
+vi /etc/profile.d/pgsql.sh
+    $ export PATH=$PATH:/usr/pgsql-11/bin:/usr/pgsql-11/lib:/usr/local/lib
+source /etc/profile.d/pgsql.sh
+#git clone git://github.com/mapnik/mapnik
+cd ~
+tar xf master.zip
+mv master mapnik
+cd mapnik
+./bootstrap.sh
+./configure
+
+# Handle mapbox/variant.hpp: no such file or directory error - https://github.com/mapnik/mapnik/issues/3246
+git submodule sync
+git submodule update --init deps/mapbox/variant
+
+# Build and install
+make && sudo make install
+sudo ldconfig
+
+``` 
 
 # Useful references
 
