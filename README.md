@@ -34,6 +34,8 @@ wget https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar
 wget https://github.com/openstreetmap/mod_tile/archive/refs/tags/0.5.tar.gz
 wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.1.tar.gz # MIGHT BE OPTIONAL FOR PROD
 wget https://noto-website-2.storage.googleapis.com/pkgs/Noto-unhinted.zip # Google fonts for map rendering
+wget https://github.com/mapbox/mason/archive/refs/tags/v0.23.0.tar.gz
+
 ```
 
 ## OSM "External Data"
@@ -253,6 +255,12 @@ echo $PATH #test
 #should already be downloaded from above
 cd ~
 tar xf mapnik-v3.1.0.tar.bz2
+
+#now have to manually extract mason in place, otherwide bootstrap.sh will error trying to get it itself
+tar xf v0.23.0.tar.gz
+mv mason-0.23.0 mapnik-v3.1.0/.mason
+
+#Now bootstrap and install
 cd mapnik-v3.1.0
 ./bootstrap.sh
 #did get a strange git error here...
