@@ -339,6 +339,16 @@ Note this then installed the following packages!
 
 ```
 
+# Python3 Setup
+Unknown if this is required yet 
+``` bash
+sudo pip3 install pyyaml requests psycopg2-binary
+
+# note that "requests" is dependent on:
+# idna, chardet, certifi, urllib3, requestsidna, chardet, certifi, urllib3, requests
+
+```
+
 
 ```
 
