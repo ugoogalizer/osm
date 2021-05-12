@@ -1,5 +1,5 @@
 # osm
-Steps to install Open Street Maps on Centos 7 (with aim to install on Red Hat 7 also)
+Steps to install Open Street Maps on Centos 7 (with aim to install on Red Hat 7 also), ultimately in a non-internet connected environment.
 Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/centos-7-open-street-map-tile-server
 
 ## Summary
@@ -36,6 +36,21 @@ wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.
 wget https://noto-website-2.storage.googleapis.com/pkgs/Noto-unhinted.zip # Google fonts for map rendering
 ```
 
+## OSM "External Data"
+
+OSM has a set of fixed data on things like water bodies, continent boundaries, icesheets etc.  This information is normally downloaded using the openstreetmap-carto-5.3.1/scripts/get-external-data.py script.  In order to run this offline, this data needs to be hosted elsewhere.  Once openstreetmap-carto-5.3.1 is extracted, have a look at the configuration file: `external-data.yml` to get the latest file names, but in summary the following need to be cached:
+
+```
+wget https://osmdata.openstreetmap.de/download/simplified-water-polygons-split-3857.zip
+wget https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+wget https://osmdata.openstreetmap.de/download/antarctica-icesheet-polygons-3857.zip
+wget https://osmdata.openstreetmap.de/download/antarctica-icesheet-outlines-3857.zip
+wget https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip
+
+```
+
+And then the `external-data.yml` will need to be updated to point to the new location of these files.
+
 
 ## Create local user 
 Steps not in the linked article
@@ -68,6 +83,9 @@ npm -v # MIGHT BE OPTIONAL IN PROD
 
 # Git Version Control is required to clone relevant dependency source code repositories
 sudo yum install git
+
+# newer versions of openstreetmap-carto require ogr2ogr, so need to install gdal:
+ udo yum install gdal
 ```
 
 # Installation
@@ -151,6 +169,14 @@ echo "grant all on geometry_columns to renderaccount;" | psql gis
 echo "grant all on spatial_ref_sys to renderaccount;" | psql gis
 exit
 
+#as postgres (sorry for order here...) 
+sudo su - postgres
+psql
+    ALTER DATABASE gis OWNER TO renderaccount; # Needs to be done for the get-excternal-data.py step later
+    ALTER TABLE geometry_columns OWNER TO renderaccount;
+    ALTER TABLE spatial_ref_sys OWNER TO renderaccount;
+    \q
+    
 # Kernel Configuration change for PostgreSQL OSM Processing Performance
 sudo vi /etc/sysctl.conf
     kernel.shmmax=268435456
@@ -388,9 +414,23 @@ cd openstreetmap-carto-5.3.1
 carto project.mml > mapnik.xml
 psql -d gis -f indexes.sql
 
-#MC Note - I think this next step is only required if we want to update the map styles.  This exact reference is out of date also, think the new process is to call "get-external-data.py
+#MC Note - I think this next step is only required if we want to update the map styles.  This exact reference is out of date also, think the new process is to call "get-external-data.py -- see below
 scripts/get-shapefiles.py
 ``` 
+
+
+Get "external data", which I think is basically the barely changing boundaries of land masses (continents) 
+
+``` bash
+#as renderaccount
+cd ~/openstreetmap-carto-5.3.1/
+mkdir data
+sudo chown renderaccount data
+scripts/get-external-data.py
+#Note this takes a very long time (10's of minutes) as it downloads large volumes of data, and you can see it slowly populate the "~/openstreetmap-carto-5.3.1/data" directory
+```
+
+
 
 ## Alternate approach without installing carto (for PROD System - untested)
 Copy across tghe following files from a system that has generated them: 
@@ -403,6 +443,8 @@ Then as renderaccount:
 cd ~/openstreetmap-carto-5.3.1
 psql -d gis -f indexes.sql
 ```
+
+TODO - figure out how to get the "external" data in offline.
 
 ## Renderd and mod_tile configuration
 Note you have to update the path to the mapnik.xml file below
@@ -572,6 +614,7 @@ sudo vi /etc/httpd/conf.d/mod_tile.conf #TODO - this file does not reflect my of
 
     </VirtualHost>
 ```
+
 
 Then configured renderd to run: 
 
