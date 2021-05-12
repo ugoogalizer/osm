@@ -340,7 +340,7 @@ Note this then installed the following packages!
 ```
 
 # Python3 Setup
-Unknown if this is required yet 
+Unknown if this is required yet - SKIP THIS PYTHON STEP FOR NOW! As apparently the openstreetmap-carto script is only required if we want to make changes to the map style.
 ``` bash
 sudo pip3 install pyyaml requests psycopg2-binary
 
@@ -364,6 +364,8 @@ cd openstreetmap-carto-5.3.1
 
 # Compile and download shape files, NOTE the first one threw quite a few Warnings for me
 carto project.mml > mapnik.xml
+
+#MC Note - I think this next step is only required if we want to update the map styles.  This exact reference is out of date also, think the new process is to call "get-external-data.py
 scripts/get-shapefiles.py
 ``` 
 
@@ -375,15 +377,16 @@ https://github.com/openstreetmap/mod_tile
 
 ``` bash
 # Configure Renderd
-vi /usr/local/etc/renderd.conf
+sudo cp renderd.conf renderd.conf.orig
+sudo vi /usr/local/etc/renderd.conf
 
     # Edit where your paths and number of threads differ
     socketname=/var/run/renderd/renderd.sock
-    num_threads=1
+    num_threads=4
     plugins_dir=/usr/local/lib/mapnik/input
     font_dir=/usr/local/lib/mapnik/fonts
     XML=/home/renderaccount/openstreetmap-carto-5.3.1/mapnik.xml # See OSM Carto Stylesheet section
-    HOST=192.168.1.1 # Host IP Address
+    HOST=127.0.0.1
 
 # Configure mod_tile
 vi /etc/httpd/conf.d/mod_tile.conf
