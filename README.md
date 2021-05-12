@@ -5,12 +5,17 @@ Summarised & updated from: https://knowledgebase.hyperlearning.ai/en/articles/ce
 ## Summary
 
 We require the following software: 
- * [Mapnik](https://github.com/mapnik/mapnik) mapping toolkit used by mod_tile and renderd to render tiles: 
-   * boost
- * [Open Street Maps Carto](https://github.com/gravitystorm/openstreetmap-carto), provides stylesheets for mapping layers in OSM 
- * apache web server - providing the web service to server web pages etc
- * [mod_tile and renderd](https://github.com/openstreetmap/mod_tile) - efficiently render and serve raster map tiles 
- * PostgreSQL with PostGIS extensions (v11 chosen here)
+* Map Rendering Software:
+  * [Mapnik](https://github.com/mapnik/mapnik) mapping toolkit used by mod_tile and renderd to render tiles: 
+    * boost
+  * [mod_tile and renderd](https://github.com/openstreetmap/mod_tile) - efficiently render and serve raster map tiles 
+* Map Stylesheet Defining (and editing) software - THIS APPEARS OPTIONAL IF YOU CREATE STYLESHEETS SEPARATELY AND IMPORT THEM INTO PRODUCTION:
+  * [Open Street Maps Carto](https://github.com/gravitystorm/openstreetmap-carto), provides stylesheets for mapping layers in OSM 
+  * [Carto](https://www.npmjs.com/package/carto)
+* Interfaces:
+  * "httpd" apache web server - providing the web service to server web pages etc
+* Storage:
+  * PostgreSQL with PostGIS extensions (v11 chosen here)
 
 Optionally, if we want to edit the stylesheets we could consider installing
  * [Kosmtik](https://github.com/kosmtik)
@@ -27,7 +32,7 @@ cd ~
 wget https://downloads.sourceforge.net/boost/boost_1_76_0.tar.bz2
 wget https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar.bz2
 wget https://github.com/openstreetmap/mod_tile/archive/refs/tags/0.5.tar.gz
-wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.1.tar.gz
+wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.1.tar.gz # MIGHT BE OPTIONAL FOR PROD
 ```
 
 
@@ -57,8 +62,8 @@ sudo yum install devtoolset-7
 scl enable devtoolset-7 bash
 
 # Carto can be installed via NodeJS so we will install NodeJS too
-sudo yum install nodejs
-npm -v
+sudo yum install nodejs # MIGHT BE OPTIONAL IN PROD
+npm -v # MIGHT BE OPTIONAL IN PROD
 
 # Git Version Control is required to clone relevant dependency source code repositories
 sudo yum install git
@@ -91,24 +96,26 @@ sudo su - postgres
 exit
 
 # Basic Authentication Methods
-cd /var/lib/pgsql/11
-cp data/pg_hba.conf data/pg_hba.conf.orig
-vi data/pg_hba.conf
+sudo su - postgres
+  cd /var/lib/pgsql/11
+  cp data/pg_hba.conf data/pg_hba.conf.orig
+  vi data/pg_hba.conf
 
     # Update your client authentication methods as appropriate
-    local   all all                 md5
+    local   all all                 ident # this allows local OS users to log in to postgres as themselves without further authentication requests
     host    all all 127.0.0.1/32    md5
     host    all all ::1/128         md5
     #host    all all 192.168.1.0/24  md5 #Only required if listening outside host I think
 
-# Tile Server OSM Processing Performance
-vi data/postgresql.conf
+  # Tile Server OSM Processing Performance
+  vi data/postgresql.conf
 
     # Update to suit your server capabilities (MC CHANGED NOTHING IN ORIG SETUP)
     shared_buffers = 128MB
     checkpoint_segments = 20
     maintenance_work_mem = 256MB
     autovacuum = off
+  exit
 
 # Restart PostgreSQL Server
 sudo systemctl restart postgresql-11.service
@@ -130,12 +137,17 @@ psql
 export PATH=$PATH:/usr/pgsql-11/bin
 psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/postgis.sql
 psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/spatial_ref_sys.sql
-createuser osm -W # No to all questions
+# sudo -u postgres psql gis --command='CREATE EXTENSION postgis;'
+sudo -u postgres psql gis --command='CREATE EXTENSION hstore;'
+#createuser osm -W # No to all questions
 createuser apache -W # No to all questions
+createuser renderaccount -W # No to all questions
 echo "grant all on geometry_columns to apache;" | psql gis
 echo "grant all on spatial_ref_sys to apache;" | psql gis
-echo "grant all on geometry_columns to osm;" | psql gis
-echo "grant all on spatial_ref_sys to osm;" | psql gis
+#echo "grant all on geometry_columns to osm;" | psql gis
+#echo "grant all on spatial_ref_sys to osm;" | psql gis
+echo "grant all on geometry_columns to renderaccount;" | psql gis
+echo "grant all on spatial_ref_sys to renderaccount;" | psql gis
 exit
 
 # Kernel Configuration change for PostgreSQL OSM Processing Performance
@@ -147,9 +159,16 @@ sudo sysctl kernel.shmmax
 
 ```
 
+### PostGres and PostGIS summary: 
+
+Database name: gis
+Loader username: osm
+Web reader username: apache
+
+
 ### Todo
 Configure and optimise postgres and storage under postgres
-
+Appears to be some good suggestions here: https://osm2pgsql.org/doc/manual.html
 
 ## osm2pgsql
 Note this installed the following packages: 
@@ -390,7 +409,7 @@ sudo vi /usr/local/etc/renderd.conf
 
 # Configure mod_tile
 sudo cp /home/renderaccount/mod_tile-0.5/debian/tileserver_site.conf /etc/httpd/conf.d/mod_tile.conf
-sudo vi /etc/httpd/conf.d/mod_tile.conf
+sudo vi /etc/httpd/conf.d/mod_tile.conf #TODO - this file does not reflect my offline version at this point!!!
 
     # Edit the ServerName and ServerAlias to suit your server
     # Also update LoadTileConfigFile and ModTileRenderdSocketName if this differs on your server
@@ -551,8 +570,17 @@ sudo chown renderaccount:renderaccount /var/lib/mod_tile
 ```
 
 # Import Map Data into PostgreSQL
+``` bash
+# Download OSM Map Data
+# In this example, I am downloading the Greater London OSM Map Data from geofabrik.de
+export PATH=$PATH:/usr/pgsql-11/bin
+cd ~
+wget http://download.geofabrik.de/europe/great-britain/england/greater-london-latest.osm.pbf
 
-TODO
+# Process this OSM Map Data into the PostGIS-enabled PostgreSQL Database
+#osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
+osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style -U renderaccount -W -H 127.0.0.1 ~/greater-london-latest.osm.pbf
+```
 
 # Test
 
@@ -567,3 +595,8 @@ Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-po
 Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
 General good counter reference for mapnik, boost, node: https://gist.github.com/davidheyman/5417b515b421a99360ca
 
+## Diagram 
+
+Open StreetMaps overview sourced from [here](https://wiki.openstreetmap.org/wiki/Component_overview)
+
+![image](https://user-images.githubusercontent.com/1974156/117956026-fe9c8b00-b35b-11eb-89fd-3300155470d7.png)
