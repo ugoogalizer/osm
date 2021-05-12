@@ -389,7 +389,8 @@ sudo vi /usr/local/etc/renderd.conf
     HOST=127.0.0.1
 
 # Configure mod_tile
-vi /etc/httpd/conf.d/mod_tile.conf
+sudo cp /home/renderaccount/mod_tile-0.5/debian/tileserver_site.conf /etc/httpd/conf.d/mod_tile.conf
+sudo vi /etc/httpd/conf.d/mod_tile.conf
 
     # Edit the ServerName and ServerAlias to suit your server
     # Also update LoadTileConfigFile and ModTileRenderdSocketName if this differs on your server
@@ -538,6 +539,15 @@ vi /etc/httpd/conf.d/mod_tile.conf
         LogLevel debug
 
     </VirtualHost>
+```
+
+Then configured renderd to run: 
+
+``` bash
+sudo mkdir /var/run/renderd
+sudo mkdir /var/lib/mod_tile
+sudo chown renderaccount:renderaccount /var/run/renderd
+sudo chown renderaccount:renderaccount /var/lib/mod_tile
 ```
 
 # Import Map Data into PostgreSQL
