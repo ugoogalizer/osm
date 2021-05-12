@@ -33,6 +33,7 @@ wget https://downloads.sourceforge.net/boost/boost_1_76_0.tar.bz2
 wget https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar.bz2
 wget https://github.com/openstreetmap/mod_tile/archive/refs/tags/0.5.tar.gz
 wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.1.tar.gz # MIGHT BE OPTIONAL FOR PROD
+wget https://noto-website-2.storage.googleapis.com/pkgs/Noto-unhinted.zip # Google fonts for map rendering
 ```
 
 
@@ -159,6 +160,8 @@ sudo sysctl kernel.shmmax
 
 ```
 
+###
+
 ### PostGres and PostGIS summary: 
 
 Database name: gis
@@ -166,9 +169,9 @@ Loader username: osm
 Web reader username: apache
 
 
-### Todo
-Configure and optimise postgres and storage under postgres
-Appears to be some good suggestions here: https://osm2pgsql.org/doc/manual.html
+### IMPORTANT Todos
+* Configure and optimise postgres and storage under postgres. Appears to be some good suggestions here: https://osm2pgsql.org/doc/manual.html
+* Ensure that the postgres database storage is on appropriate storage volume (as it's going to get big!)
 
 ## osm2pgsql
 Note this installed the following packages: 
@@ -281,7 +284,7 @@ sudo ldconfig
 ```
 
 
-## Carto Install With Stylesheet
+## Carto Install With Stylesheet # NOTE POSSIBLY NOT REQUIRED IN PROD
 Unknown how to achieve this offline yet...
 ``` bash
 # Install Carto using NodeJS that we installed earlier
@@ -358,8 +361,8 @@ Note this then installed the following packages!
 
 ```
 
-# Python3 Setup
-Unknown if this is required yet - SKIP THIS PYTHON STEP FOR NOW! As apparently the openstreetmap-carto script is only required if we want to make changes to the map style.
+## Python3 Setup  # NOTE POSSIBLY NOT REQUIRED IN PROD
+Unknown if this is re quired yet - SKIP THIS PYTHON STEP FOR NOW! As apparently the openstreetmap-carto script is only required if we want to make changes to the map style.
 ``` bash
 sudo pip3 install pyyaml requests psycopg2-binary
 
@@ -369,7 +372,7 @@ sudo pip3 install pyyaml requests psycopg2-binary
 ```
 
 
-```
+``` bash
 
 #OSM Carto Stylesheet
 # Clone
@@ -383,16 +386,26 @@ cd openstreetmap-carto-5.3.1
 
 # Compile and download shape files, NOTE the first one threw quite a few Warnings for me
 carto project.mml > mapnik.xml
+psql -d gis -f indexes.sql
 
 #MC Note - I think this next step is only required if we want to update the map styles.  This exact reference is out of date also, think the new process is to call "get-external-data.py
 scripts/get-shapefiles.py
 ``` 
 
+## Alternate approach without installing carto (for PROD System - untested)
+Copy across tghe following files from a system that has generated them: 
+* indexes.sql
+* mapnik.xml
+Into the folder `~/openstreetmap-carto-5.3.1`
+
+Then as renderaccount: 
+``` bash 
+cd ~/openstreetmap-carto-5.3.1
+psql -d gis -f indexes.sql
+```
+
 ## Renderd and mod_tile configuration
 Note you have to update the path to the mapnik.xml file below
-
-https://github.com/openstreetmap/mod_tile
-
 
 ``` bash
 # Configure Renderd
@@ -569,7 +582,23 @@ sudo chown renderaccount:renderaccount /var/run/renderd
 sudo chown renderaccount:renderaccount /var/lib/mod_tile
 ```
 
+## Install Google Fonts
+
+```
+cd ~
+# https://noto-website-2.storage.googleapis.com/pkgs/Noto-unhinted.zip
+mkdir noto
+mv Noto-unhinted.zip noto/
+cd noto/
+unzip Noto-unhinted.zip
+sudo mkdir -p /usr/local/lib/mapnik/fonts/noto
+sudo mv *otf *otc *ttf /usr/local/lib/mapnik/fonts/noto
+
+```
+
 # Import Map Data into PostgreSQL
+
+
 ``` bash
 # Download OSM Map Data
 # In this example, I am downloading the Greater London OSM Map Data from geofabrik.de
@@ -579,12 +608,17 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 
 # Process this OSM Map Data into the PostGIS-enabled PostgreSQL Database
 #osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
-osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style -U renderaccount -W -H 127.0.0.1 ~/greater-london-latest.osm.pbf
+osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style -U renderaccount -H 127.0.0.1 ~/greater-london-latest.osm.pbf
 ```
 
 # Test
 
-TODO
+## Running renderd manually
+As renderaccount
+```
+renderd -f -c /usr/local/etc/renderd.conf
+
+```
 
 # Useful references
 
@@ -594,6 +628,7 @@ https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
 Setup postgres: https://www.symmcom.com/docs/how-tos/databases/how-to-install-postgresql-11-x-on-centos-7
 Setup PostGIS: https://computingforgeeks.com/how-to-install-postgis-on-centos-7/
 General good counter reference for mapnik, boost, node: https://gist.github.com/davidheyman/5417b515b421a99360ca
+How to install Google Noto fonts: https://www.google.com/get/noto/help/install/
 
 ## Diagram 
 
