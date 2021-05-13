@@ -49,6 +49,8 @@ wget https://osmdata.openstreetmap.de/download/antarctica-icesheet-polygons-3857
 wget https://osmdata.openstreetmap.de/download/antarctica-icesheet-outlines-3857.zip
 wget https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip
 
+#Testing purposes (sample leaflet app)
+wget https://raw.githubusercontent.com/SomeoneElseOSM/mod_tile/switch2osm/extra/sample_leaflet.html
 ```
 
 And then the `external-data.yml` will need to be updated to point to the new location of these files.
@@ -519,14 +521,56 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.style --tag-transform-script /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.lua ~/greater-london-latest.osm.pbf
 ```
 
-# Test
+## Autostarting renderd
 
-## Running renderd manually
+```
+# renderd.service
+#AS ROOT
+cat >/lib/systemd/system/renderd.service <<CMD_EOF
+[Unit]
+Description=Mapnik rendering daemon
+After=syslog.target
+After=network.target
+[Service]
+User=renderaccount
+Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+ExecStart=/usr/local/bin/renderd -f -c /usr/local/etc/renderd.conf
+#WorkingDirectory=
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+CMD_EOF
+
+exit
+
+#as renderaccount:
+sudo systemctl enable renderd
+sudo systemctl start renderd
+tail -f /var/log/messages |grep renderd
+```
+
+
+
+## Running renderd manually (testing)
 As renderaccount
 ```
 renderd -f -c /usr/local/etc/renderd.conf
 
 ```
+
+## Spinning up a Leaflet 
+As renderaccount
+``` bash
+cd /var/www/html
+sudo wget https://raw.githubusercontent.com/SomeoneElseOSM/mod_tile/switch2osm/extra/sample_leaflet.html
+sudo vi sample_leaflet.html
+    # Update the following line to point to your server & endpoint: 
+    L.tileLayer('http://127.0.0.1/osm_tiles/{z}/{x}/{y}.png', {
+
+```
+Then browse to http://127.0.0.1/sample_leaflet.html#10/-5.0355/122.5580
 
 # Useful references
 
