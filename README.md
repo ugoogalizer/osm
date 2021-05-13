@@ -463,7 +463,7 @@ Note you have to update the path to the mapnik.xml file below
 
 ``` bash
 # Configure Renderd
-sudo cp renderd.conf renderd.conf.orig
+sudo cp /usr/local/etc/renderd.conf /usr/local/etc/renderd.conf.orig
 sudo vi /usr/local/etc/renderd.conf
 
     # Edit where your paths and number of threads differ
