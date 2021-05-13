@@ -397,15 +397,6 @@ Note this then installed the following packages!
 
 ```
 
-## Python3 Setup  # NOTE POSSIBLY NOT REQUIRED IN PROD
-Unknown if this is re quired yet - SKIP THIS PYTHON STEP FOR NOW! As apparently the openstreetmap-carto script is only required if we want to make changes to the map style.
-``` bash
-sudo pip3 install pyyaml requests psycopg2-binary
-
-# note that "requests" is dependent on:
-# idna, chardet, certifi, urllib3, requestsidna, chardet, certifi, urllib3, requests
-
-```
 
 
 ``` bash
@@ -422,7 +413,6 @@ cd openstreetmap-carto-5.3.1
 
 # Compile and download shape files, NOTE the first one threw quite a few Warnings for me
 carto project.mml > mapnik.xml
-psql -d gis -f indexes.sql
 
 #MC Note - I think this next step is only required if we want to update the map styles.  This exact reference is out of date also, think the new process is to call "get-external-data.py -- see below
 scripts/get-shapefiles.py
@@ -470,6 +460,7 @@ sudo vi /usr/local/etc/renderd.conf
     socketname=/var/run/renderd/renderd.sock
     num_threads=4
     plugins_dir=/usr/local/lib/mapnik/input
+    tile_ir={SOME LOCATION WITH LOTS OF STORAGE}
     font_dir=/usr/local/lib/mapnik/fonts
     XML=/home/renderaccount/openstreetmap-carto-5.3.1/mapnik.xml # See OSM Carto Stylesheet section
     HOST=127.0.0.1
@@ -521,6 +512,10 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 #osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
 #osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style ~/greater-london-latest.osm.pbf
 osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.style --tag-transform-script /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.lua ~/greater-london-latest.osm.pbf
+
+#Now ensure that indexes are created (as renderaccount):
+cd ~/penstreetmap-carto-5.3.1
+psql -d gis -f indexes.sql
 ```
 
 ## Autostarting renderd
