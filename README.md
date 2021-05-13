@@ -197,7 +197,7 @@ Loader username: osm
 Web reader username: apache
 
 
-### IMPORTANT Todos
+### ANT Todos
 * Configure and optimise postgres and storage under postgres. Appears to be some good suggestions here: https://osm2pgsql.org/doc/manual.html
 * Ensure that the postgres database storage is on appropriate storage volume (as it's going to get big!)
 
@@ -659,7 +659,8 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 
 # Process this OSM Map Data into the PostGIS-enabled PostgreSQL Database
 #osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
-osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style ~/greater-london-latest.osm.pbf
+#osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style ~/greater-london-latest.osm.pbf
+osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.style --tag-transform-script /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.lua ~/greater-london-latest.osm.pbf
 ```
 
 # Test
