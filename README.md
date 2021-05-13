@@ -421,6 +421,7 @@ scripts/get-shapefiles.py
 
 Get "external data", which I think is basically the barely changing boundaries of land masses (continents) 
 
+If you have external internet access:
 ``` bash
 #as renderaccount
 cd ~/openstreetmap-carto-5.3.1/
@@ -429,8 +430,22 @@ sudo chown renderaccount data
 scripts/get-external-data.py
 #Note this takes a very long time (10's of minutes) as it downloads large volumes of data, and you can see it slowly populate the "~/openstreetmap-carto-5.3.1/data" directory
 
+```
 
-#TODO - update the external-data.yaml to repoint this data at a local repo of them
+If you have to be offline: 
+``` bash
+#change directories to whereever you have uploaded the external data zip files
+cd ~
+cp simplified-water-polygons-split-3857.zip water-polygons-split-3857.zip antarctica-icesheet-polygons-3857.zip antarctica-icesheet-outlines-3857.zipne_110m_admin_0_boundary_lines_land.zip /var/www/html
+cd /openstreetmap-carto-5.3.1/
+mkdir data
+sudo chown renderaccount data
+cp external-data.yaml external-data.yaml.orig
+vi external-data.yaml
+    #Change all the references to websites instead to http://127.0.0.1/
+scripts/get-external-data.py
+#Note this takes a very long time (10's of minutes) as it downloads large volumes of data, and you can see it slowly populate the "~/openstreetmap-carto-5.3.1/data" directory
+
 ```
 
 
