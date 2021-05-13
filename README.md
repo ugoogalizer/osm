@@ -89,7 +89,7 @@ npm -v # MIGHT BE OPTIONAL IN PROD
 sudo yum install git
 
 # newer versions of openstreetmap-carto require ogr2ogr, so need to install gdal:
- udo yum install gdal
+sudo yum install gdal
 ```
 
 # Installation
