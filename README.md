@@ -659,7 +659,7 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 
 # Process this OSM Map Data into the PostGIS-enabled PostgreSQL Database
 #osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
-osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style -U renderaccount -H 127.0.0.1 ~/greater-london-latest.osm.pbf
+osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style ~/greater-london-latest.osm.pbf
 ```
 
 # Test
