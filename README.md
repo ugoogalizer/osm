@@ -310,6 +310,9 @@ sudo cp -rf ~/mapnik-v3.1.0/include/mapnik/* /usr/include/mapnik
 #NOTE MC ADJUSTED the below line to be all because box2d.hpp wasn't in that folder
 #sudo cp ~/mapnik-v3.1.0/include/mapnik/geometry/box2d.hpp /usr/include/mapnik
 sudo cp ~/mapnik-v3.1.0/include/mapnik/geometry/* /usr/include/mapnik
+sudo find /usr/include/mapnik -type d - exec chmod 755 {} +
+sudo find /usr/include/mapnik -type d - exec chmod 644 {} +
+
 
 # Build and install mod_tile
 cd ~/mod_tile-0.5
