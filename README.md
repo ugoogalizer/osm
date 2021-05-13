@@ -487,7 +487,11 @@ sudo vi /usr/local/etc/renderd.conf
 sudo cp /home/renderaccount/mod_tile-0.5/debian/tileserver_site.conf /etc/httpd/conf.d/mod_tile.conf
 sudo vi /etc/httpd/conf.d/mod_tile.conf
 
-    #make the following changes: 
+    #Add this line before the "<VirtualHost *:80>" line: 
+    LoadModule tile_module /etc/httpd/modules/mod_tile.so
+    
+    #then make the following changes: 
+    
     DocumentRoot /var/www/html
     LoadTileConfigFile /usr/local/etc/renderd.conf
 ```
