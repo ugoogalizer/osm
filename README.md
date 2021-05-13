@@ -323,7 +323,7 @@ sudo ldconfig
 ```
 
 
-## Carto Install With Stylesheet # NOTE POSSIBLY NOT REQUIRED IN PROD
+## Carto Install With Stylesheet # N NOT REQUIRED IN PROD
 Unknown how to achieve this offline yet...
 ``` bash
 # Install Carto using NodeJS that we installed earlier
@@ -400,7 +400,7 @@ Note this then installed the following packages!
 
 ```
 
-
+## Setup the Carto Stylesheet
 
 ``` bash
 
@@ -421,8 +421,15 @@ carto project.mml > mapnik.xml
 scripts/get-shapefiles.py
 ``` 
 
+## Get External Data
 
 Get "external data", which I think is basically the barely changing boundaries of land masses (continents) 
+
+First install python and some packages: 
+```
+sudo yum install python3
+sudo pip3 install pyyaml requests psycopg2-binary
+```
 
 If you have external internet access:
 ``` bash
