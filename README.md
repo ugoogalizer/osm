@@ -460,7 +460,7 @@ sudo vi /usr/local/etc/renderd.conf
     socketname=/var/run/renderd/renderd.sock
     num_threads=4
     plugins_dir=/usr/local/lib/mapnik/input
-    tile_ir={SOME LOCATION WITH LOTS OF STORAGE}
+    TILEDIR={SOME LOCATION WITH LOTS OF STORAGE}
     font_dir=/usr/local/lib/mapnik/fonts
     XML=/home/renderaccount/openstreetmap-carto-5.3.1/mapnik.xml # See OSM Carto Stylesheet section
     HOST=127.0.0.1
