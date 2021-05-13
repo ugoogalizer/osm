@@ -199,7 +199,7 @@ Loader username: osm
 Web reader username: apache
 
 
-### ANT Todos
+### Remaining Todos
 * Configure and optimise postgres and storage under postgres. Appears to be some good suggestions here: https://osm2pgsql.org/doc/manual.html
 * Ensure that the postgres database storage is on appropriate storage volume (as it's going to get big!)
 
@@ -438,6 +438,9 @@ mkdir data
 sudo chown renderaccount data
 scripts/get-external-data.py
 #Note this takes a very long time (10's of minutes) as it downloads large volumes of data, and you can see it slowly populate the "~/openstreetmap-carto-5.3.1/data" directory
+
+
+#TODO - update the external-data.yaml to repoint this data at a local repo of them
 ```
 
 
@@ -454,7 +457,6 @@ cd ~/openstreetmap-carto-5.3.1
 psql -d gis -f indexes.sql
 ```
 
-TODO - figure out how to get the "external" data in offline.
 
 ## Renderd and mod_tile configuration
 Note you have to update the path to the mapnik.xml file below
@@ -474,7 +476,7 @@ sudo vi /usr/local/etc/renderd.conf
 
 # Configure mod_tile
 sudo cp /home/renderaccount/mod_tile-0.5/debian/tileserver_site.conf /etc/httpd/conf.d/mod_tile.conf
-sudo vi /etc/httpd/conf.d/mod_tile.conf #TODO - this file does not reflect my offline version at this point!!!
+sudo vi /etc/httpd/conf.d/mod_tile.conf
 
     #make the following changes: 
     DocumentRoot /var/www/html
