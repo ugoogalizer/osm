@@ -586,15 +586,16 @@ renderd -f -c /usr/local/etc/renderd.conf
 
 ```
 
-## Spinning up a Leaflet 
+## Spinning up a Test Leaflet Website
 As renderaccount
 ``` bash
 cd /var/www/html
 sudo wget https://raw.githubusercontent.com/SomeoneElseOSM/mod_tile/switch2osm/extra/sample_leaflet.html
 sudo vi sample_leaflet.html
-    # Update the following line to point to your server & endpoint: 
+    # Update the following line to point to your server & endpoint:
+    # i.e. change the IP address to the IP address of your server
     L.tileLayer('http://127.0.0.1/osm_tiles/{z}/{x}/{y}.png', {
-
+    
 ```
 Then browse to http://127.0.0.1/sample_leaflet.html#10/-5.0355/122.5580
 
