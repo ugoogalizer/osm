@@ -511,6 +511,8 @@ sudo mkdir /var/run/renderd
 sudo mkdir /var/lib/mod_tile
 sudo chown renderaccount:renderaccount /var/run/renderd
 sudo chown renderaccount:renderaccount /var/lib/mod_tile
+sudo chmod 755 /var/run/renderd
+sudo chmod 755 /var/lib/mod_tile
 ```
 
 ## Install Google Fonts
