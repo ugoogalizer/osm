@@ -38,6 +38,18 @@ wget https://github.com/mapbox/mason/archive/refs/tags/v0.23.0.tar.gz
 
 ```
 
+## Storage Setup
+Ensure you have a lot of storage somewhere (I've read up to 1TB allocated): 
+
+* Postgres database
+* mod_tile tile cache: 
+
+```
+mkdir /data/osm_database
+mkdir /data/osm_tiles
+
+```
+
 ## OSM "External Data"
 
 OSM has a set of fixed data on things like water bodies, continent boundaries, icesheets etc.  This information is normally downloaded using the openstreetmap-carto-5.3.1/scripts/get-external-data.py script.  In order to run this offline, this data needs to be hosted elsewhere.  Once openstreetmap-carto-5.3.1 is extracted, have a look at the configuration file: `external-data.yml` to get the latest file names, but in summary the following need to be cached:
@@ -95,6 +107,8 @@ sudo yum install gdal
 # Installation
 
 ## Postgres and PostGIS
+
+TODO **Ensure that the database is created into /data/osm_database**
 
 ```
 # Install Postgres
@@ -485,7 +499,7 @@ sudo vi /usr/local/etc/renderd.conf
     socketname=/var/run/renderd/renderd.sock
     num_threads=4
     plugins_dir=/usr/local/lib/mapnik/input
-    TILEDIR={SOME LOCATION WITH LOTS OF STORAGE}
+    TILEDIR=/data/osm_tiles
     font_dir=/usr/local/lib/mapnik/fonts
     XML=/home/renderaccount/openstreetmap-carto-5.3.1/mapnik.xml # See OSM Carto Stylesheet section
     HOST=127.0.0.1
