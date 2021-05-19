@@ -36,6 +36,8 @@ wget https://github.com/gravitystorm/openstreetmap-carto/archive/refs/tags/v5.3.
 wget https://noto-website-2.storage.googleapis.com/pkgs/Noto-unhinted.zip # Google fonts for map rendering
 wget https://github.com/mapbox/mason/archive/refs/tags/v0.23.0.tar.gz
 
+#untested: 
+wget https://github.com/openstreetmap/osm2pgsql/archive/refs/tags/1.4.2.tar.gz
 ```
 
 ## Storage Setup
@@ -218,6 +220,7 @@ Web reader username: apache
 * Ensure that the postgres database storage is on appropriate storage volume (as it's going to get big!)
 
 ## osm2pgsql
+STRONG suggestion don't install osm2pgsql from the centos/rhel repos as it's very old, full of (now fixed) bugs and places constraints on other packages to be earlier versions.  Instead use the compile your own steps found later below.
 Note this installed the following packages: 
 * geos-3.4.2-2.el7.x86_64
 * proj-4.8.0-4.el7.x86_64
@@ -258,6 +261,60 @@ sudo ldconfig
 ```
 
 Note if you have logged out and back in and are seeing g++ compiler issues around c++14, you need to rerun the following: `scl enable devtoolset-7 bash`
+
+## Install osm2pgsqql (latest - untested)
+Centos comes with a version of osm2pgsql from about 2017 (v0.92), but after multiple rounds of loading issues with osm2pgsql, decided to try the latest version by doing the following: 
+
+``` bash
+# as renderaccount
+
+#Check what osm2pgsql is already installed: 
+which osm2pgsql
+    /bin/osm2pgsql
+
+#PACKAGES: 
+sudo yum remove osm2pgsql
+sudo yum install cmake3
+#which was dependent on: 
+    # cmake3 3.17.5-1.el7 
+    # cmake3-data 3.17.5-1.el7 
+    # rhash 1.3.4-2.el7 
+
+#Not sure if this step was required
+#sudo yum install make expat-devel
+
+
+### Also unsure if this is required,: 
+#Redo the original large yum install command from above, which after removing osm2pgsql allows the update of the following packages:
+ cabextract                           x86_64                           1.9-7.el7                                  epel                              68 k
+ gdal-devel                           x86_64                           1.11.4-3.el7                               epel                             130 k
+ geos-devel                           x86_64                           3.5.0-1.rhel7                              pgdg95                           1.4 M
+ proj-epsg                            x86_64                           4.8.0-4.el7                                epel                              58 k
+ proj-nad                             x86_64                           4.8.0-4.el7                                epel                             2.1 M
+ ragel                                x86_64                           7.0.0.9-2.el7                              epel                             1.3 M
+Updating:
+ geos                                 x86_64                           3.5.0-1.rhel7                              pgdg95                           540 k
+Installing for dependencies:
+ colm                                 x86_64                           0.13.0.4-2.el7                             epel                             378 k
+
+# Extract build and install
+scl enable devtoolset-7 bash
+cd ~
+tar xf 1.4.2.tar.gz
+cd osm2pgsql-1.4.2
+mkdir build && cd build && cmake3 ..
+#Note - it's ok here to not have clang-tidy or pandoc (they're for developers)
+make
+sudo make install
+
+#Check version
+osm2pgsql --version
+    2021-05-19 21:02:31  osm2pgsql version 1.4.2
+    Compiled using the following library versions:
+    Libosmium 2.16.0
+    Proj [API 4] Rel. 4.8.0, 6 March 2012
+    Lua 5.1.4
+```
 
 
 ## Install Mapnik
