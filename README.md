@@ -174,25 +174,22 @@ psql
 
 # Execute PostGIS SQL Installation Files (still as the postgres user)
 export PATH=$PATH:/usr/pgsql-11/bin
-psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/postgis.sql
-psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/spatial_ref_sys.sql
-# sudo -u postgres psql gis --command='CREATE EXTENSION postgis;'
-sudo -u postgres psql gis --command='CREATE EXTENSION hstore;'
-#createuser osm -W # No to all questions
+psql gis --command='CREATE EXTENSION postgis;'
+psql gis --command='CREATE EXTENSION hstore;'
+#psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/postgis.sql # THIS IS OBSOLETE SINCE: https://postgis.net/docs/postgis_administration.html#create_spatial_db
+#psql gis < /usr/pgsql-11/share/contrib/postgis-2.5/spatial_ref_sys.sql # THIS IS OBSOLETE SINCE: https://postgis.net/docs/postgis_administration.html#create_spatial_db
 createuser apache -W # No to all questions
 createuser renderaccount -W # No to all questions
 echo "grant all on geometry_columns to apache;" | psql gis
 echo "grant all on spatial_ref_sys to apache;" | psql gis
-#echo "grant all on geometry_columns to osm;" | psql gis
-#echo "grant all on spatial_ref_sys to osm;" | psql gis
 echo "grant all on geometry_columns to renderaccount;" | psql gis
 echo "grant all on spatial_ref_sys to renderaccount;" | psql gis
 exit
 
-#as postgres (sorry for order here...) 
+#as postgres
 sudo su - postgres
 psql
-    ALTER DATABASE gis OWNER TO renderaccount; # Needs to be done for the get-excternal-data.py step later
+    ALTER DATABASE gis OWNER TO renderaccount;
     ALTER TABLE geometry_columns OWNER TO renderaccount;
     ALTER TABLE spatial_ref_sys OWNER TO renderaccount;
     \q
@@ -614,6 +611,9 @@ wget http://download.geofabrik.de/europe/great-britain/england/greater-london-la
 #osm2pgsql --slim -d gis -C 1600 --number-process 4 -S /usr/local/share/osm2pgsql/default.style greater-london-latest.osm.pbf
 #osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /usr/share/osm2pgsql/default.style ~/greater-london-latest.osm.pbf
 osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.style --tag-transform-script /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.lua ~/greater-london-latest.osm.pbf
+
+#osm2pgsql --slim -d gis --hstore -C 16000 --number-process 4 -S /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.style --tag-transform-script /home/renderaccount/openstreetmap-carto-5.3.1/openstreetmap-carto.lua /media/usb/planet-split/europe-latest.osm.pbf --drop -c
+# https://osm2pgsql.org/doc/manual.html
 
 #Now ensure that indexes are created (as renderaccount):
 cd ~/penstreetmap-carto-5.3.1
