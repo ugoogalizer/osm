@@ -672,6 +672,16 @@ sudo vi sample_leaflet.html
 ```
 Then browse to http://127.0.0.1/sample_leaflet.html#10/-5.0355/122.5580
 
+# Disabling services (cause you want them off for some reason)
+
+```
+sudo systemctl stop renderd
+sudo systemctl disable renderd
+sudo systemctl stop renderd
+sudo systemctl disable renderd
+
+```
+
 # Useful references
 
 Once again, the main source: https://knowledgebase.hyperlearning.ai/en/articles/centos-7-open-street-map-tile-server
